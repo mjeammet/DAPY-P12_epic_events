@@ -17,6 +17,9 @@ class Client(models.Model):
     sales_contact = models.ForeignKey('User',
         on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f'{self.first_name} {self.last_name}'
+
 
 class Contract(models.Model):
     id = models.BigAutoField(primary_key=True)
