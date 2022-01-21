@@ -19,6 +19,8 @@ class Client(models.Model):
     date_updated = models.DateTimeField(auto_now=True)
     sales_contact = models.ForeignKey(
         to=settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    # TODO add blank option for sales contact
+
 
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
