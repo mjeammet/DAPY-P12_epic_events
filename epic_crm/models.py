@@ -4,7 +4,11 @@ from django.conf import settings
 
 
 class User(AbstractUser):
-    pass
+    ROLE = (
+        ('ADMIN', 'CRM users management and all accesses'),
+        ('SALES', 'Sales team, in charge of signing contracts'),
+        ('SUPPORT', 'Suppport team, in charge of managing events'),
+      )
 
 
 class Client(models.Model):

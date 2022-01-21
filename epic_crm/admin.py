@@ -1,7 +1,12 @@
 from django.contrib import admin
-from .models import Client, Contract, Event
+from .models import User, Client, Contract, Event
 
 
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
+    pass
+    
+    
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
     search_fieds = ['company']

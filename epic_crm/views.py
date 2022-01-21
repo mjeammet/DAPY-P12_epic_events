@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
 
-from epic_crm.models import Client, Contract
-from epic_crm.serializers import ClientListSerializer, ClientDetailSerializer, ContractSerializer
+from epic_crm.models import Client, Contract, Event
+from epic_crm.serializers import ClientListSerializer, ClientDetailSerializer, ContractSerializer, EventSerializer
 
 
 class ClientViewset(ModelViewSet):
@@ -27,4 +27,13 @@ class ContractViewset(ModelViewSet):
 
     def get_queryset(self):
         queryset = Contract.objects.all()
+        return queryset
+
+
+class EventViewset(ModelViewSet):
+
+    serializer_class = EventSerializer
+
+    def get_queryset(self):
+        queryset = Event.objects.all()
         return queryset
