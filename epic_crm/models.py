@@ -4,11 +4,13 @@ from django.conf import settings
 
 
 class User(AbstractUser):
-    ROLE = (
-        ('ADMIN', 'CRM users management and all accesses'),
-        ('SALES', 'Sales team, in charge of signing contracts'),
-        ('SUPPORT', 'Suppport team, in charge of managing events'),
+    TEAMS = (
+        ('ADMIN', 'Admin team, managing users and accessing all data'),
+        ('SALES', 'Sales team, managing clients and contracts'),
+        ('SUPPORT', 'Suppport team, managing events'),
       )
+    
+    team = models.CharField(choices=TEAMS, max_length=7)
 
 
 class Client(models.Model):
