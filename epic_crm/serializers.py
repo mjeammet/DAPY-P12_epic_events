@@ -1,5 +1,13 @@
 from rest_framework.serializers import ModelSerializer
-from .models import Client, Contract, Event
+from .models import Client, Contract, Event, User
+
+
+class UserListSerializer(ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'team']
+
 
 class ClientListSerializer(ModelSerializer):
 
