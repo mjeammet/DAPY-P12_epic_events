@@ -3,24 +3,15 @@
 from django.db import migrations
 
 def create_groups(apps, schema_migration):
-    # ensure that permissions have been created
-    emit_post_migrate_signal(verbosity=1, interactive=False, db='default')
 
-    User = apps.get_model('authentication', 'User')
+    User = apps.get_model('epic_crm', 'User')
     Group = apps.get_model('auth', 'Group')
 
-    sales = Group(name='sales_team')
+    sales = Group(name='sales')
     sales.save()
 
-    support = Group(name='support_team')
+    support = Group(name='support')
     support.save()
-
-    for user in User.objects.all():
-        if user.role == 'SALES':
-            sales.user_set.add(user)
-        if user.role == 'SUPPORT':
-            support.user_set.add(user)
-
 
 
 class Migration(migrations.Migration):

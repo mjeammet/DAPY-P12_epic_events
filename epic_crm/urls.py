@@ -16,7 +16,7 @@ events_router = routers.NestedSimpleRouter(clients_router, 'clients', lookup='cl
 events_router.register('events', EventViewset, basename='events')
 
 urlpatterns = [
-    path('auth/', include('rest_framework.urls')),
+    # path('auth/', include('rest_framework.urls')), # TODO redirects to accounts/profile. Change redirect ? Delete endpoint ? 
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('', include(user_router.urls)),
     path('', include(clients_router.urls)),
