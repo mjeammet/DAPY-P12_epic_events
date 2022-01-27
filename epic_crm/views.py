@@ -6,7 +6,7 @@ from rest_framework.viewsets import ModelViewSet
 from epic_crm.models import User, Client, Contract, Event
 from epic_crm.serializers import UserListSerializer, UserDetailSerializer, ClientListSerializer, ClientDetailSerializer, ContractSerializer, EventSerializer
 from epic_crm.permissions import IsAdmin, IsAdminOrSales, IsAdminOrSupport
-
+from epic_crm.filters import ClientFilter
 
 
 class UserViewset(ModelViewSet):
@@ -29,6 +29,7 @@ class ClientViewset(ModelViewSet):
 
     serializer_class = ClientListSerializer
     detail_serializer_class = ClientDetailSerializer
+    filterset_class = ClientFilter
 
     def get_queryset(self):
         user = self.request.user
@@ -39,15 +40,6 @@ class ClientViewset(ModelViewSet):
             queryset = Client.objects.filter(sales_contact=user)
         elif Group.objects.get(name='support') in user.groups.all():
             queryset = Client.objects.filter(events__user=user)
-
-        # TODO Make it a mixin ?
-        client_name = self.request.GET.get('name')
-        if client_name is not None:
-            queryset = queryset.filter(Q(first_name__icontains=client_name) | Q(last_name__icontains=client_name))
-        
-        client_email = self.request.GET.get('email')
-        if client_email is not None:
-            queryset = queryset.filter(email__icontains=client_email)
 
         return queryset
 

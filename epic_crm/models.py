@@ -25,8 +25,6 @@ class Client(models.Model):
     date_updated = models.DateTimeField(auto_now=True)
     sales_contact = models.ForeignKey(
         to=settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True)
-    # TODO add blank option for sales contact
-
 
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
@@ -55,9 +53,9 @@ class Event(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
     support_contact = models.ForeignKey(
-        to=settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+        to=settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True)
     #event_status = models.CharField(choices=) foreign key - int
     # event_status = models.CharField(choices=EVENT_STATUS, max_length=6, default=EVENT_STATUS.FUTURE)
     attendees = models.IntegerField()
     event_date = models.DateTimeField()
-    notes = models.TextField(max_length=2048)
+    notes = models.TextField(max_length=2048, blank=True)
