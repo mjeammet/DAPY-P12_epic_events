@@ -47,3 +47,8 @@ class EventFilter(django_filters.FilterSet):
     class Meta:
         model = Event
         fields = []
+
+    # TODO factorize this functio to avoid repetition with ContractFilter
+    def filter_client_name(self, queryset, name, value):
+        queryset = queryset.filter(Q(client__first_name__icontains=value) | Q(client__last_name__icontains=value))
+        return queryset
