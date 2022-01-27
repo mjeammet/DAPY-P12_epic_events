@@ -27,6 +27,10 @@ class Client(models.Model):
         to=settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True)
 
     def __str__(self):
+        return f'{self.username}'
+
+    @property
+    def full_name(self):
         return f'{self.first_name} {self.last_name}'
 
 

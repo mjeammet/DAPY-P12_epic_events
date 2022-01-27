@@ -6,7 +6,7 @@ from rest_framework.viewsets import ModelViewSet
 from epic_crm.models import User, Client, Contract, Event
 from epic_crm.serializers import UserListSerializer, UserDetailSerializer, ClientListSerializer, ClientDetailSerializer, ContractSerializer, EventSerializer
 from epic_crm.permissions import IsAdmin, IsAdminOrSales, IsAdminOrSupport
-from epic_crm.filters import ClientFilter
+from epic_crm.filters import ClientFilter, ContractFilter, EventFilter
 
 
 class UserViewset(ModelViewSet):
@@ -53,25 +53,10 @@ class ContractViewset(ModelViewSet):
 
     serializer_class = ContractSerializer
     permission_classes = (IsAdminOrSales, )
+    filterset_class = ContractFilter
 
     def get_queryset(self):
         queryset = Contract.objects.all()
-
-        client_name = self.request.GET.get('name')
-        if client_name is not None:
-            queryset = queryset.filter(Q(client_first_name__icontains=client_name) | Q(last_name__icontains=client_name))
-        
-        client_email = self.request.GET.get('email')
-        if client_email is not None:
-            queryset = queryset.filter(client_email__icontains=client_email)
-
-        contract_date = self.request.GET.get('date')
-        if contract_date is not None:
-            queryset = queryset.filter(date=contract_date)
-
-        contract_amount = self.request.GET.get('amount')
-        if contract_amount is not None:
-            queryset = queryset.filter(amount=contract_amount)
 
         return queryset
 
@@ -80,20 +65,9 @@ class EventViewset(ModelViewSet):
 
     serializer_class = EventSerializer
     permission_classes = (IsAdminOrSupport, )
+    filterset_class = EventFilter
 
     def get_queryset(self):
         queryset = Event.objects.all()
-
-        client_name = self.request.GET.get('name')
-        if client_name is not None:
-            queryset = queryset.filter(Q(client_first_name__icontains=client_name) | Q(last_name__icontains=client_name))
-        
-        client_email = self.request.GET.get('email')
-        if client_email is not None:
-            queryset = queryset.filter(client_email__icontains=client_email)
-
-        event_date = self.request.GET.get('date')
-        if event_date is not None:
-            queryset = queryset.filter(date=event_date)
 
         return queryset
