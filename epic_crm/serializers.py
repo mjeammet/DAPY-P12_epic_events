@@ -43,7 +43,13 @@ class ClientDetailSerializer(ModelSerializer):
         fields = '__all__'
 
 
-class ContractSerializer(ModelSerializer):
+class ContractListSerializer(ModelSerializer):
+
+    class Meta:
+        model = Contract
+        fields = ["id", "client", "sales_contact", "is_signed"]
+
+class ContractDetailSerializer(ModelSerializer):
 
     class Meta:
         model = Contract

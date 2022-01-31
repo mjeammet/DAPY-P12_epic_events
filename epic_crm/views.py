@@ -3,9 +3,10 @@ from django.db.models import Q
 from django.contrib.auth.models import Group
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.exceptions import APIException
+from rest_framework.response import Response
 
 from epic_crm.models import User, Client, Contract, Event
-from epic_crm.serializers import UserListSerializer, UserDetailSerializer, ClientListSerializer, ClientDetailSerializer, ContractSerializer, EventSerializer
+from epic_crm.serializers import UserListSerializer, UserDetailSerializer, ClientListSerializer, ClientDetailSerializer, ContractListSerializer, ContractDetailSerializer, EventSerializer
 from epic_crm.permissions import IsAdmin, IsAdminOrSales, IsAdminOrSupport
 from epic_crm.filters import ClientFilter, ContractFilter, EventFilter
 
@@ -59,7 +60,8 @@ class ClientViewset(ModelViewSet):
 
 class ContractViewset(ModelViewSet):
 
-    serializer_class = ContractSerializer
+    serializer_class = ContractListSerializer
+    detail_serializer_class = ContractDetailSerializer
     permission_classes = (IsAdminOrSales, )
     filterset_class = ContractFilter
 
@@ -70,8 +72,21 @@ class ContractViewset(ModelViewSet):
 
         return queryset
 
-    # def perform_create(self, serializer):
-    #     client_id = self.kwargs['clients_pk']
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return self.detail_serializer_class
+        return super().get_serializer_class()
+
+    def create(self, request, client_pk):
+        data = request.data.copy()
+        data['client'] = client_pk
+        data['sales_contact'] = request.user.id
+
+        serialized_data = ContractDetailSerializer(data=data)
+        serialized_data.is_valid(raise_exception=True)
+        serialized_data.save()
+
+        return Response(serialized_data.data, status=status.HTTP_201_CREATED)
 
 
 class EventViewset(ModelViewSet):
