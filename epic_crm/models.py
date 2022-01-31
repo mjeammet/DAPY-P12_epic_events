@@ -12,6 +12,11 @@ class User(AbstractUser):
     
     team = models.CharField(choices=TEAMS, max_length=7)
 
+    # @property
+    # def username(self):
+    #     return f'{self.first_name[0].lower()}{self.last_name.lower()}'
+
+
 
 class Client(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -26,12 +31,13 @@ class Client(models.Model):
     sales_contact = models.ForeignKey(
         to=settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True)
 
-    def __str__(self):
-        return f'{self.username}'
 
     @property
     def full_name(self):
         return f'{self.first_name} {self.last_name}'
+
+    def __str__(self):
+        return f'{self.email}'
 
 
 class Contract(models.Model):
@@ -41,7 +47,7 @@ class Contract(models.Model):
     client = models.ForeignKey(to='Client', on_delete=models.PROTECT)
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
-    status = models.BooleanField()
+    is_signed = models.BooleanField() # Previously "status"
     amount = models.FloatField()
     payment_due = models.DateTimeField()
 

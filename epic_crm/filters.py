@@ -8,6 +8,7 @@ class ClientFilter(django_filters.FilterSet):
 
     name = django_filters.CharFilter(method='filter_name')
     email = django_filters.CharFilter(field_name="email", lookup_expr='icontains')
+    sales_contact = django_filters.CharFilter(field_name="sales_contact")
 
     class Meta:
         model = Client

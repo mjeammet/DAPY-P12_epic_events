@@ -1,5 +1,5 @@
 from django.contrib.auth.hashers import make_password
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import ModelSerializer, ValidationError
 from .models import Client, Contract, Event, User
 
 
@@ -28,6 +28,12 @@ class ClientListSerializer(ModelSerializer):
     class Meta:
         model = Client
         fields = ['id', 'first_name', 'last_name', 'email', 'sales_contact']
+
+    def validate_email(self, value):
+        existing_client = Client.objects.filter(email=value)
+        if existing_client.exists():
+            raise ValidationError(f'email already listed in database.')
+        return value
 
 
 class ClientDetailSerializer(ModelSerializer):

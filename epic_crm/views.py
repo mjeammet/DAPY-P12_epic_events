@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.db.models import Q
 from django.contrib.auth.models import Group
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.exceptions import APIException
 
 from epic_crm.models import User, Client, Contract, Event
 from epic_crm.serializers import UserListSerializer, UserDetailSerializer, ClientListSerializer, ClientDetailSerializer, ContractSerializer, EventSerializer
@@ -24,6 +25,11 @@ class UserViewset(ModelViewSet):
             return self.detail_serializer_class
         return super().get_serializer_class()
 
+    # def perform_update():
+        # TODO handle change of group
+        # my_group = Group.objects.get(name='my_group_name') 
+        # my_group.user_set.add(your_user)
+
 
 class ClientViewset(ModelViewSet):
 
@@ -37,9 +43,11 @@ class ClientViewset(ModelViewSet):
         if user.is_superuser:
             queryset = Client.objects.all()
         elif Group.objects.get(name='sales') in user.groups.all():
-            queryset = Client.objects.filter(sales_contact=user)
+            queryset = Client.objects.filter(Q(sales_contact=user) | Q(sales_contact__isnull=True))
         elif Group.objects.get(name='support') in user.groups.all():
             queryset = Client.objects.filter(events__user=user)
+        else:
+            raise APIException('You currently don\t belong to any team, please contact an admin to be added to sales or support team.')
 
         return queryset
 
@@ -55,10 +63,15 @@ class ContractViewset(ModelViewSet):
     permission_classes = (IsAdminOrSales, )
     filterset_class = ContractFilter
 
+    #TODO vérifier que tout fonctionne bien, en list et en retrieve, quon a bien les contrats qu'on veut
     def get_queryset(self):
-        queryset = Contract.objects.all()
+        client = get_object_or_404(Client, pk=self.kwargs['client_pk'])
+        queryset = Contract.objects.filter(client=client)
 
         return queryset
+
+    # def perform_create(self, serializer):
+    #     client_id = self.kwargs['clients_pk']
 
 
 class EventViewset(ModelViewSet):
@@ -71,3 +84,5 @@ class EventViewset(ModelViewSet):
         queryset = Event.objects.all()
 
         return queryset
+
+# TODO paginer les résultats
