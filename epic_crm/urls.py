@@ -15,6 +15,9 @@ contracts_router.register('contracts', ContractViewset, basename='contracts')
 events_router = routers.NestedSimpleRouter(clients_router, 'clients', lookup='client')
 events_router.register('events', EventViewset, basename='events')
 
+def trigger_error(request):
+    division_by_zero = 1 / 0
+
 urlpatterns = [
     # path('auth/', include('rest_framework.urls')), # TODO redirects to accounts/profile. Change redirect ? Delete endpoint ? 
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
@@ -23,4 +26,5 @@ urlpatterns = [
     path('', include(clients_router.urls)),
     path('', include(contracts_router.urls)),
     path('', include(events_router.urls)),
+    # path('sentry-debug/', trigger_error),
 ]
