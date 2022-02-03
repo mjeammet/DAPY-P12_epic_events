@@ -23,8 +23,10 @@ class IsSalesContact(BasePermission):
         if Group.objects.get(name='sales') in user.groups.all():
 
             if view.action == "list" and "client_pk" not in view.kwargs:
+                # Can view client lists
                 return True
             else:
+                # For everything else, user needs to be client sales_contact
                 client_id = kwargs['client_pk'] if 'client_pk' in kwargs else kwargs['pk'] if 'pk' in kwargs else None
                 client = get_object_or_404(Client, pk=client_id)
 
@@ -35,10 +37,10 @@ class IsSalesContact(BasePermission):
     # def has_object_permission(self, request, view, obj):
     #     pass
 
-class IsAdminOrSupport(BasePermission):
+class IsSupportContact(BasePermission):
 
     def has_permission(self, request, view):
         user = request.user
 
-        if user.is_superuser or Group.objects.get(name='support') in user.groups.all():
+        if Group.objects.get(name='support') in user.groups.all():
             return True

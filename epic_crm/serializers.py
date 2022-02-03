@@ -49,6 +49,7 @@ class ContractListSerializer(ModelSerializer):
         model = Contract
         fields = ["id", "client", "sales_contact", "is_signed"]
 
+
 class ContractDetailSerializer(ModelSerializer):
 
     class Meta:
@@ -56,7 +57,17 @@ class ContractDetailSerializer(ModelSerializer):
         fields = '__all__'
 
 
-class EventSerializer(ModelSerializer):
+class EventListSerializer(ModelSerializer):
+
+    class Meta:
+        model = Event
+        fields = ['id', 'event_status', 'client']
+
+    # def validate_event_date(self, value):
+    # TODO asegurarse que el evento es en el futuro
+
+
+class EventDetailSerializer(ModelSerializer):
 
     class Meta:
         model = Event

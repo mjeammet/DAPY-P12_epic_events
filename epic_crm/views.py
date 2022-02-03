@@ -5,11 +5,13 @@ from django.contrib.auth.models import Group
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.exceptions import APIException
 from rest_framework.response import Response
+from rest_framework.decorators import action, permission_classes
 
 from epic_crm.models import User, Client, Contract, Event
-from epic_crm.serializers import UserListSerializer, UserDetailSerializer, ClientListSerializer, ClientDetailSerializer, ContractListSerializer, ContractDetailSerializer, EventSerializer
-from epic_crm.permissions import IsAdmin, IsSalesContact, IsAdminOrSupport
+from epic_crm.serializers import UserListSerializer, UserDetailSerializer, ClientListSerializer, ClientDetailSerializer, ContractListSerializer, ContractDetailSerializer
+from epic_crm.permissions import IsAdmin, IsSalesContact, IsSupportContact
 from epic_crm.filters import ClientFilter, ContractFilter, EventFilter
+from . import serializers
 
 
 class UserViewset(ModelViewSet):
@@ -31,6 +33,8 @@ class UserViewset(ModelViewSet):
         # TODO handle change of group
         # my_group = Group.objects.get(name='my_group_name') 
         # my_group.user_set.add(your_user)
+
+    # TODO ajouter fonction partial_update pour attribuer à telle ou telle équipe
 
 
 class ClientViewset(ModelViewSet):
@@ -67,7 +71,6 @@ class ContractViewset(ModelViewSet):
     permission_classes = [IsAdmin|IsSalesContact, ]
     filterset_class = ContractFilter
 
-    #TODO vérifier que tout fonctionne bien, en list et en retrieve, quon a bien les contrats qu'on veut
     def get_queryset(self):
         client = get_object_or_404(Client, pk=self.kwargs['client_pk'])
         queryset = Contract.objects.filter(client=client)
@@ -78,6 +81,20 @@ class ContractViewset(ModelViewSet):
         if self.action == 'retrieve':
             return self.detail_serializer_class
         return super().get_serializer_class()
+
+    def get_permissions(self):
+        if self.action == "destroy":
+            permission_classes = [IsAdmin]
+        else:
+            permission_classes = self.permission_classes
+        return [permission() for permission in permission_classes]
+
+    def get_permissions(self):
+        if self.action == "destroy":
+            permission_classes = [IsAdmin]
+        else:
+            permission_classes = self.permission_classes
+        return [permission() for permission in permission_classes]
 
     def create(self, request, client_pk):
         client = get_object_or_404(Client, pk=client_pk)
@@ -101,29 +118,55 @@ class ContractViewset(ModelViewSet):
             print(contract.is_signed)
             if not contract.is_signed and request.data["is_signed"] == "true":
                 contract_just_signed = True
-            
+                # Automatiser la création de contrat ? 
+
         serialized_data = ContractDetailSerializer(data=request.data)
         serialized_data.is_valid(raise_exception=True)
         serialized_data.save()
 
-        if contract_just_signed:
-            print("CONTRACT JUST SIGNED AND WE NEED TO EDIT A NEW EVENT")
-            #new_event = Contract.objects.create()
-
         return Response(serialized_data.data)
-        # TODO si on passe la signature de contract à true, ajouter un evenemtnet
-        # TODO par extension, mettre les evenements sous les contrats ?
+
+    # @action(detail=True, methods=['post'])
+    # def create_event(self, request, *args, **kwargs):
+    #     print("this contract has been signed.")
+    #     EventViewset.reverse_action()
 
 
 class EventViewset(ModelViewSet):
 
-    serializer_class = EventSerializer
-    permission_classes = (IsAdminOrSupport, )
+    serializer_class = serializers.EventListSerializer
+    detail_serializer_class = serializers.EventDetailSerializer
+    permission_classes = [IsAdmin|IsSupportContact, ]
     filterset_class = EventFilter
 
     def get_queryset(self):
-        queryset = Event.objects.all()
+        user = self.request.user
+        queryset = Event.objects.filter(support_contact=user)
 
         return queryset
 
-# TODO paginer les résultats
+    def get_serializer_class(self):
+        if self.action in ['retrieve', 'partial_update']:
+            return self.detail_serializer_class
+        return super().get_serializer_class()
+
+    def get_permissions(self):
+        if self.action == "create":
+            permission_classes = [IsAdmin|IsSalesContact]
+        elif self.action == "destroy":
+            permission_classes = [IsAdmin]
+        else:
+            permission_classes = self.permission_classes
+        return [permission() for permission in permission_classes]
+
+    def create(self, request, client_pk):
+        client = get_object_or_404(Client, pk=client_pk)
+        
+        data = request.data.copy()
+        data['client'] = client_pk
+
+        serialized_data = serializers.EventDetailSerializer(data=data)
+        serialized_data.is_valid(raise_exception=True)
+        serialized_data.save()
+
+        return Response(serialized_data.data)

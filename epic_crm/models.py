@@ -53,10 +53,12 @@ class Contract(models.Model):
 
     
 class Event(models.Model):
-    EVENT_STATUS = (
-        ('FUTURE', 'Future event'),
-        ('PAST', 'Past event'),
-    )
+    INCOMING_EVENT = "incoming"
+    COMPLETED_EVENT = "over"
+    EVENT_STATUS = [
+        (INCOMING_EVENT, 'Future event'),
+        (COMPLETED_EVENT, 'Past event'),
+    ]
 
     id = models.BigAutoField(primary_key=True)
     client = models.ForeignKey(to='Client', on_delete=models.PROTECT)
@@ -64,8 +66,7 @@ class Event(models.Model):
     date_updated = models.DateTimeField(auto_now=True)
     support_contact = models.ForeignKey(
         to=settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True)
-    #event_status = models.CharField(choices=) foreign key - int
-    # event_status = models.CharField(choices=EVENT_STATUS, max_length=6, default=EVENT_STATUS.FUTURE)
+    event_status = models.CharField(choices=EVENT_STATUS, max_length=20, default=INCOMING_EVENT) # Not Foreign Key but tuple
     attendees = models.IntegerField()
     event_date = models.DateTimeField()
     notes = models.TextField(max_length=2048, blank=True)

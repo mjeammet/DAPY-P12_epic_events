@@ -12,11 +12,11 @@ clients_router = routers.SimpleRouter()
 clients_router.register('clients', ClientViewset, basename='clients')
 contracts_router = routers.NestedSimpleRouter(clients_router, 'clients', lookup='client')
 contracts_router.register('contracts', ContractViewset, basename='contracts')
-events_router = routers.NestedSimpleRouter(clients_router, 'clients', lookup='client')
+# events_router = routers.NestedSimpleRouter(clients_router, 'clients', lookup='client')
+# events_router.register('events', EventViewset, basename='events')
+events_router = routers.SimpleRouter()
 events_router.register('events', EventViewset, basename='events')
 
-def trigger_error(request):
-    division_by_zero = 1 / 0
 
 urlpatterns = [
     # path('auth/', include('rest_framework.urls')), # TODO redirects to accounts/profile. Change redirect ? Delete endpoint ? 

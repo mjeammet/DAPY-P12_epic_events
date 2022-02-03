@@ -4,6 +4,8 @@ import django_filters
 from epic_crm.models import Client, Contract, Event
 
 
+# TODO anadir un filtro para los usarios e sus equipos
+
 class ClientFilter(django_filters.FilterSet):
 
     name = django_filters.CharFilter(method='filter_name')
@@ -44,6 +46,8 @@ class EventFilter(django_filters.FilterSet):
     client_email = django_filters.CharFilter(field_name="client__email", lookup_expr='icontains')
     event_after = django_filters.DateTimeFilter(field_name="event_date", lookup_expr='gte')
     event_before = django_filters.DateTimeFilter(field_name="event_date", lookup_expr='lte')
+    # TODO anadir un filtro pa el estado
+
 
     class Meta:
         model = Event
