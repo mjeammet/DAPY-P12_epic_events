@@ -61,7 +61,7 @@ class Event(models.Model):
     ]
 
     id = models.BigAutoField(primary_key=True)
-    client = models.ForeignKey(to='Client', on_delete=models.PROTECT)
+    client = models.ForeignKey(to='Client', on_delete=models.PROTECT, related_name='events')
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
     support_contact = models.ForeignKey(

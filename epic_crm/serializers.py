@@ -43,6 +43,8 @@ class ClientDetailSerializer(ModelSerializer):
         fields = '__all__'
 
 
+    # TODO élaborer pour qu'on voit les détails du sales_contact
+
 class ContractListSerializer(ModelSerializer):
 
     class Meta:

@@ -41,7 +41,7 @@ class ClientViewset(ModelViewSet):
 
     serializer_class = ClientListSerializer
     detail_serializer_class = ClientDetailSerializer
-    permission_classes = [IsAdmin|IsSalesContact]
+    permission_classes = [IsAdmin|IsSalesContact|IsSupportContact]
     filterset_class = ClientFilter
 
     def get_queryset(self):
@@ -52,7 +52,7 @@ class ClientViewset(ModelViewSet):
         elif Group.objects.get(name='sales') in user.groups.all():
             queryset = Client.objects.filter(Q(sales_contact=user) | Q(sales_contact__isnull=True))
         elif Group.objects.get(name='support') in user.groups.all():
-            queryset = Client.objects.filter(events__user=user)
+            queryset = Client.objects.filter(events__support_contact=user)
         else:
             raise APIException('You currently don\t belong to any team, please contact an admin to be added to sales or support team.')
 
@@ -140,13 +140,13 @@ class EventViewset(ModelViewSet):
     filterset_class = EventFilter
 
     def get_queryset(self):
-        user = self.request.user
+        user = self.request.user    
         queryset = Event.objects.filter(support_contact=user)
 
         return queryset
 
     def get_serializer_class(self):
-        if self.action in ['retrieve', 'partial_update']:
+        if self.action in ['retrieve', 'partial_update', 'create']:
             return self.detail_serializer_class
         return super().get_serializer_class()
 
@@ -158,15 +158,3 @@ class EventViewset(ModelViewSet):
         else:
             permission_classes = self.permission_classes
         return [permission() for permission in permission_classes]
-
-    def create(self, request, client_pk):
-        client = get_object_or_404(Client, pk=client_pk)
-        
-        data = request.data.copy()
-        data['client'] = client_pk
-
-        serialized_data = serializers.EventDetailSerializer(data=data)
-        serialized_data.is_valid(raise_exception=True)
-        serialized_data.save()
-
-        return Response(serialized_data.data)
