@@ -14,27 +14,53 @@ from epic_crm.filters import ClientFilter, ContractFilter, EventFilter
 from . import serializers
 
 
-class UserViewset(ModelViewSet):
+class MultipleSerializerMixin:
+    """Mixin to distinguish list from detail serializer."""
 
-    serializer_class = UserListSerializer
-    detail_serializer_class = UserDetailSerializer
+    detail_serializer_class = None
+
+    def get_serializer_class(self):
+        detail_serializer_actions = ['retrieve', 'update', 'partial_update', 'create']
+        if self.action in detail_serializer_actions and self.detail_serializer_class is not None:
+            # Si l'action demandée est le détail alors nous retournons le serializer de détail
+            return self.detail_serializer_class
+        return super().get_serializer_class()
+
+
+class UserViewset(MultipleSerializerMixin, ModelViewSet):
+
+    serializer_class = serializers.UserListSerializer
+    detail_serializer_class = serializers.UserDetailSerializer
     permission_classes = (IsAdmin, )
 
     def get_queryset(self):
         queryset = User.objects.all()
         return queryset
 
-    def get_serializer_class(self):
-        if self.action == 'retrieve':
-            return self.detail_serializer_class
-        return super().get_serializer_class()
+    # def create(self, request, *args, **kwargs):
 
-    # def perform_update():
-        # TODO handle change of group
-        # my_group = Group.objects.get(name='my_group_name') 
-        # my_group.user_set.add(your_user)
+    #     if "group" in request.data:
+    #         group_added = Group.objects.filter(name=request.data["group"])
+    #         if group_added.exists():
+    #             group_added.first().user_set.add(updated_user)
 
-    # TODO ajouter fonction partial_update pour attribuer à telle ou telle équipe
+        # return super().create(self, request, *args, **kwargs)
+
+    def partial_update(self, request, pk, *args, **kwargs):
+        updated_user = get_object_or_404(User, pk=pk)
+
+        if "group" in request.data:
+            group_added = Group.objects.filter(name=request.data["group"])
+            # TODO remove other groups
+            # TODO déjà dans ce groupe
+            if group_added.exists():
+                group_added.first().user_set.add(updated_user)
+        
+        serialized_data = UserDetailSerializer(updated_user, data=request.data, partial=True)
+        serialized_data.is_valid(raise_exception=True)
+        serialized_data.save()
+
+        return Response(serialized_data.data)
 
 
 class ClientViewset(ModelViewSet):

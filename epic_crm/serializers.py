@@ -1,4 +1,5 @@
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import Group
 from rest_framework.serializers import ModelSerializer, ValidationError
 from .models import Client, Contract, Event, User
 
@@ -14,6 +15,10 @@ class UserListSerializer(ModelSerializer):
         if len(value) < 8:
             raise ValidationError('Password must be at least 8 characters')
         return make_password(value)
+
+    def validate_groups(self, value):
+        group_object = Group.objects.filter(name=value)
+        return group_object.id
 
 
 class UserDetailSerializer(ModelSerializer):
