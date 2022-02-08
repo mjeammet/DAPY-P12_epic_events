@@ -8,7 +8,6 @@ from rest_framework.response import Response
 from rest_framework.decorators import action, permission_classes
 
 from epic_crm.models import User, Client, Contract, Event
-from epic_crm.serializers import UserListSerializer, UserDetailSerializer, ClientListSerializer, ClientDetailSerializer, ContractListSerializer, ContractDetailSerializer
 from epic_crm.permissions import IsAdmin, IsSalesContact, IsSupportContact
 from epic_crm.filters import ClientFilter, ContractFilter, EventFilter
 from . import serializers
@@ -40,56 +39,60 @@ class UserViewset(MultipleSerializerMixin, ModelViewSet):
 
 class ClientViewset(MultipleSerializerMixin, ModelViewSet):
 
-    serializer_class = ClientListSerializer
-    detail_serializer_class = ClientDetailSerializer
+    serializer_class = serializers.ClientListSerializer
+    detail_serializer_class = serializers.ClientDetailSerializer
     permission_classes = [IsAdmin|IsSalesContact]
     filterset_class = ClientFilter
 
     def get_queryset(self):
         user = self.request.user
 
-        if user.is_superuser:
-            queryset = Client.objects.all()
-        elif Group.objects.get(name='sales') in user.groups.all():
-            queryset = Client.objects.filter(Q(sales_contact=user) | Q(sales_contact__isnull=True))
-        elif Group.objects.get(name='support') in user.groups.all():
-            queryset = Client.objects.filter(events__support_contact=user)
+        if self.action == "list" and not user.is_superuser:
+            if Group.objects.get(name='sales') in user.groups.all():
+                queryset = Client.objects.filter(Q(sales_contact=user) | Q(sales_contact__isnull=True))
+            elif Group.objects.get(name='support') in user.groups.all():
+                queryset = Client.objects.filter(events__support_contact=user)
+            else:
+                raise APIException('You currently don\t belong to any team, please contact an admin to be added to sales or support team.')
         else:
-            raise APIException('You currently don\t belong to any team, please contact an admin to be added to sales or support team.')
+            queryset = Client.objects.all()
 
         return queryset
 
 
 class ContractViewset(MultipleSerializerMixin, ModelViewSet):
 
-    serializer_class = ContractListSerializer
-    detail_serializer_class = ContractDetailSerializer
+    serializer_class = serializers.ContractListSerializer
+    detail_serializer_class = serializers.ContractDetailSerializer
     permission_classes = [IsAdmin|IsSalesContact, ]
     filterset_class = ContractFilter
 
     def get_queryset(self):
-        client = get_object_or_404(Client, pk=self.kwargs['client_pk'])
-        queryset = Contract.objects.filter(client=client)
+        user = self.request.user
+
+        if self.action == "list" and not user.is_superuser:
+            queryset = Contract.objects.filter(sales_contact=self.request.user)
+        else:
+            queryset = Contract.objects.all()        
 
         return queryset
 
-    def create(self, request, client_pk):
-        client = get_object_or_404(Client, pk=client_pk)
-        
+    def create(self, request):        
         data = request.data.copy()
-        data['client'] = client_pk
         data['sales_contact'] = request.user.id
 
+        serialized_data = serializers.ContractDetailSerializer(data=data)
+        serialized_data.is_valid(raise_exception=True)
+        serialized_data.save()
+
+        client = get_object_or_404(Client, pk=serialized_data.data.get('client'))
         if client.sales_contact is None:
             client.sales_contact = request.user
-            # TODO test that
-        serialized_data = ContractDetailSerializer(data=data)
-        serialized_data.is_valid(raise_exception=True)
-        serialized_data.save()        
+            client.save()
 
         return Response(serialized_data.data)
 
-    def partial_update(self, request, client_pk, pk=None):
+    def partial_update(self, request, pk=None):
         contract = get_object_or_404(Contract, pk=pk)
         if 'is_signed' in request.data:
             print(contract.is_signed)
@@ -97,7 +100,7 @@ class ContractViewset(MultipleSerializerMixin, ModelViewSet):
                 contract_just_signed = True
                 # Automatiser la création de contrat ? 
 
-        serialized_data = ContractDetailSerializer(data=request.data)
+        serialized_data = serializers.ContractDetailSerializer(data=request.data)
         serialized_data.is_valid(raise_exception=True)
         serialized_data.save()
 

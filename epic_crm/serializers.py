@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import Group
 from rest_framework.serializers import ModelSerializer, ValidationError, CharField, ChoiceField
@@ -63,6 +64,17 @@ class ContractDetailSerializer(ModelSerializer):
     class Meta:
         model = Contract
         fields = '__all__'
+
+    def validate(self, data):
+        print('\n')
+        client = data['client']
+        user = data['sales_contact']
+        print(client)
+        print(user)
+        if client.sales_contact in [user, None]:
+            return data
+        else:
+            raise ValidationError("You cannot create a contract for a client who is not neither linked to you nor a prospect.")            
 
 
 class EventListSerializer(ModelSerializer):

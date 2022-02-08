@@ -21,31 +21,28 @@ class IsSalesContact(BasePermission):
         user = request.user
         kwargs = view.kwargs
 
-        if not user.groups.filter(name="sales").exists():
-            return False
-
-        if view.action == "list" and "client_pk" not in view.kwargs:
-            # Can view client lists
-            return True
-        elif view.action == "create" and request.path_info == "/api/v1/events/":
-            # Sales team can create events for their clients
-            client = Client.objects.filter(pk=request.data.get("client"))
-            if not client.exists():
-                raise APIException("Client must be an existing client id")
-            if client.first().sales_contact == user:
+        if user.groups.filter(name="sales").exists():
+            # if view.action == "create" and request.path_info == "/api/v1/events/":
+            #     # Sales team can create events for their clients
+            #     client = Client.objects.filter(pk=request.data.get("client"))
+            #     if not client.exists():
+            #         raise APIException("Client must be an existing client id")
+            #     if client.first().sales_contact == user:
+            #         return True
+            # else:
+                # For everything else, user needs to be client sales_contact
+            if view.action in ["list", "create"]:
                 return True
-        else:
-            # For everything else, user needs to be client sales_contact
-            client_id = kwargs['client_pk'] if 'client_pk' in kwargs else kwargs['pk'] if 'pk' in kwargs else None
-            client = get_object_or_404(Client, pk=client_id)
-
-            if client.sales_contact in [request.user, None]:
-                return True
+            elif kwargs.get('pk'):
+                client = get_object_or_404(Client, pk=kwargs.get('pk'))
+                if client.sales_contact in [request.user, None]:
+                    return True
                 
 
     def has_object_permission(self, request, view, obj):
-        
-        if obj.sales_contact == request.user and view.action != "destroy":
+    
+        if view.action != "destroy" and obj.sales_contact in [request.user, None]:
+            print(f'\n{obj.sales_contact} {request.user}')
             return True
 
 
