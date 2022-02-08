@@ -1,6 +1,6 @@
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import Group
-from rest_framework.serializers import ModelSerializer, ValidationError
+from rest_framework.serializers import ModelSerializer, ValidationError, CharField, ChoiceField
 from .models import Client, Contract, Event, User
 
 
@@ -10,22 +10,20 @@ class UserListSerializer(ModelSerializer):
         model = User
         fields = ['id', 'username', 'groups']
 
+
+class UserDetailSerializer(ModelSerializer):
+
+    # TODO find a way to input group names instead of ids
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', "first_name", "last_name", "email", "is_superuser", "is_active", "date_joined", "last_login", "groups"]
+
     def validate_password(self, value):
         """Hashes password."""
         if len(value) < 8:
             raise ValidationError('Password must be at least 8 characters')
         return make_password(value)
-
-    def validate_groups(self, value):
-        group_object = Group.objects.filter(name=value)
-        return group_object.id
-
-
-class UserDetailSerializer(ModelSerializer):
-
-    class Meta:
-        model = User
-        fields = ['id', 'username', "first_name", "last_name", "email", "is_superuser", "is_active", "date_joined", "last_login", "groups"]
 
 
 class ClientListSerializer(ModelSerializer):
@@ -49,6 +47,7 @@ class ClientDetailSerializer(ModelSerializer):
 
 
     # TODO élaborer pour qu'on voit les détails du sales_contact
+
 
 class ContractListSerializer(ModelSerializer):
 

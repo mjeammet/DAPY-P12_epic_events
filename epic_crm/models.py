@@ -12,11 +12,6 @@ class User(AbstractUser):
     
     team = models.CharField(choices=TEAMS, max_length=7)
 
-    # @property
-    # def username(self):
-    #     return f'{self.first_name[0].lower()}{self.last_name.lower()}'
-
-
 
 class Client(models.Model):
     id = models.BigAutoField(primary_key=True)

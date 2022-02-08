@@ -37,31 +37,6 @@ class UserViewset(MultipleSerializerMixin, ModelViewSet):
         queryset = User.objects.all()
         return queryset
 
-    # def create(self, request, *args, **kwargs):
-
-    #     if "group" in request.data:
-    #         group_added = Group.objects.filter(name=request.data["group"])
-    #         if group_added.exists():
-    #             group_added.first().user_set.add(updated_user)
-
-        # return super().create(self, request, *args, **kwargs)
-
-    def partial_update(self, request, pk, *args, **kwargs):
-        updated_user = get_object_or_404(User, pk=pk)
-
-        if "group" in request.data:
-            group_added = Group.objects.filter(name=request.data["group"])
-            # TODO remove other groups
-            # TODO déjà dans ce groupe
-            if group_added.exists():
-                group_added.first().user_set.add(updated_user)
-        
-        serialized_data = UserDetailSerializer(updated_user, data=request.data, partial=True)
-        serialized_data.is_valid(raise_exception=True)
-        serialized_data.save()
-
-        return Response(serialized_data.data)
-
 
 class ClientViewset(ModelViewSet):
 

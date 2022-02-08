@@ -10,10 +10,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='event',
-            name='event_status',
-        ),
         migrations.AlterField(
             model_name='event',
             name='attendees',
@@ -24,4 +20,5 @@ class Migration(migrations.Migration):
             name='event_date',
             field=models.DateTimeField(),
         ),
+        
     ]
