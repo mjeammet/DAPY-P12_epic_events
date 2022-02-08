@@ -20,7 +20,7 @@ class MultipleSerializerMixin:
     detail_serializer_class = None
 
     def get_serializer_class(self):
-        detail_serializer_actions = ['retrieve', 'update', 'partial_update', 'create']
+        detail_serializer_actions = ['retrieve', 'update', 'partial_update', 'create', 'set_password']
         if self.action in detail_serializer_actions and self.detail_serializer_class is not None:
             # Si l'action demandée est le détail alors nous retournons le serializer de détail
             return self.detail_serializer_class
@@ -38,11 +38,11 @@ class UserViewset(MultipleSerializerMixin, ModelViewSet):
         return queryset
 
 
-class ClientViewset(ModelViewSet):
+class ClientViewset(MultipleSerializerMixin, ModelViewSet):
 
     serializer_class = ClientListSerializer
     detail_serializer_class = ClientDetailSerializer
-    permission_classes = [IsAdmin|IsSalesContact|IsSupportContact]
+    permission_classes = [IsAdmin|IsSalesContact]
     filterset_class = ClientFilter
 
     def get_queryset(self):
@@ -59,13 +59,8 @@ class ClientViewset(ModelViewSet):
 
         return queryset
 
-    def get_serializer_class(self):
-        if self.action == 'retrieve':
-            return self.detail_serializer_class
-        return super().get_serializer_class()
 
-
-class ContractViewset(ModelViewSet):
+class ContractViewset(MultipleSerializerMixin, ModelViewSet):
 
     serializer_class = ContractListSerializer
     detail_serializer_class = ContractDetailSerializer
@@ -77,25 +72,6 @@ class ContractViewset(ModelViewSet):
         queryset = Contract.objects.filter(client=client)
 
         return queryset
-
-    def get_serializer_class(self):
-        if self.action == 'retrieve':
-            return self.detail_serializer_class
-        return super().get_serializer_class()
-
-    def get_permissions(self):
-        if self.action == "destroy":
-            permission_classes = [IsAdmin]
-        else:
-            permission_classes = self.permission_classes
-        return [permission() for permission in permission_classes]
-
-    def get_permissions(self):
-        if self.action == "destroy":
-            permission_classes = [IsAdmin]
-        else:
-            permission_classes = self.permission_classes
-        return [permission() for permission in permission_classes]
 
     def create(self, request, client_pk):
         client = get_object_or_404(Client, pk=client_pk)
@@ -146,16 +122,9 @@ class EventViewset(ModelViewSet):
 
         return queryset
 
-    def get_serializer_class(self):
-        if self.action in ['retrieve', 'partial_update', 'create']:
-            return self.detail_serializer_class
-        return super().get_serializer_class()
-
     def get_permissions(self):
         if self.action == "create":
             permission_classes = [IsAdmin|IsSalesContact]
-        elif self.action == "destroy":
-            permission_classes = [IsAdmin]
         else:
             permission_classes = self.permission_classes
         return [permission() for permission in permission_classes]

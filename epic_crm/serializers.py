@@ -8,7 +8,8 @@ class UserListSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'groups']
+        fields = ['id', 'username', 'password', 'groups']
+        extra_kwargs = {'password': {'write_only': True}}
 
 
 class UserDetailSerializer(ModelSerializer):
@@ -17,7 +18,8 @@ class UserDetailSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', "first_name", "last_name", "email", "is_superuser", "is_active", "date_joined", "last_login", "groups"]
+        fields = ['id', 'username', "password", "first_name", "last_name", "email", "is_superuser", "is_active", "date_joined", "last_login", "groups"]
+        extra_kwargs = {'password': {'write_only': True}}
 
     def validate_password(self, value):
         """Hashes password."""
@@ -30,7 +32,7 @@ class ClientListSerializer(ModelSerializer):
 
     class Meta:
         model = Client
-        fields = ['id', 'first_name', 'last_name', 'email', 'sales_contact']
+        fields = ['id', 'full_name', 'email', 'sales_contact']
 
     def validate_email(self, value):
         existing_client = Client.objects.filter(email=value)
@@ -69,12 +71,15 @@ class EventListSerializer(ModelSerializer):
         model = Event
         fields = ['id', 'event_status', 'client']
 
-    # def validate_event_date(self, value):
-    # TODO asegurarse que el evento es en el futuro
-
 
 class EventDetailSerializer(ModelSerializer):
 
     class Meta:
         model = Event
         fields = '__all__'
+        read_only_fields = ['client', 'support_contact']
+
+    # def validate_event_date(self, value):
+    # TODO asegurarse que el evento es en el futuro
+    def validate_event_date(self, value):
+        pass

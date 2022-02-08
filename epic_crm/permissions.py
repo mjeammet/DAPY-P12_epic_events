@@ -21,30 +21,31 @@ class IsSalesContact(BasePermission):
         user = request.user
         kwargs = view.kwargs
 
-        if user.groups.filter(name="sales").exists():
+        if not user.groups.filter(name="sales").exists():
+            return False
 
-            if view.action == "list" and "client_pk" not in view.kwargs:
-                # Can view client lists
+        if view.action == "list" and "client_pk" not in view.kwargs:
+            # Can view client lists
+            return True
+        elif view.action == "create" and request.path_info == "/api/v1/events/":
+            # Sales team can create events for their clients
+            client = Client.objects.filter(pk=request.data.get("client"))
+            if not client.exists():
+                raise APIException("Client must be an existing client id")
+            if client.first().sales_contact == user:
                 return True
-            elif view.action == "create" and request.path_info == "/api/v1/events/":
-                # Sales team can create events for their clients
-                client = Client.objects.filter(pk=request.data.get("client"))
-                if not client.exists():
-                    raise APIException("Client must be an existing client id")
-                if client.first().sales_contact == user:
-                    return True
-            else:
-                # For everything else, user needs to be client sales_contact
-                client_id = kwargs['client_pk'] if 'client_pk' in kwargs else kwargs['pk'] if 'pk' in kwargs else None
-                client = get_object_or_404(Client, pk=client_id)
+        else:
+            # For everything else, user needs to be client sales_contact
+            client_id = kwargs['client_pk'] if 'client_pk' in kwargs else kwargs['pk'] if 'pk' in kwargs else None
+            client = get_object_or_404(Client, pk=client_id)
 
-                if client.sales_contact in [request.user, None]:
-                    return True
+            if client.sales_contact in [request.user, None]:
+                return True
                 
 
     def has_object_permission(self, request, view, obj):
         
-        if obj.sales_contact == request.user:
+        if obj.sales_contact == request.user and view.action != "destroy":
             return True
 
 
@@ -58,5 +59,6 @@ class IsSupportContact(BasePermission):
 
     def has_object_permission(self, request, view, obj):
 
-        if obj.support_contact == request.user:
+        supportteam_allowed_actions = ['list', 'retrieve', 'update']
+        if obj.support_contact == request.user and view.action in supportteam_allowed_actions:
             return True

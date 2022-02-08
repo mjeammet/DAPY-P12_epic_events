@@ -4,11 +4,11 @@ import django_filters
 from epic_crm.models import Client, Contract, Event
 
 
-# TODO anadir un filtro para los usarios e sus equipos
+# TODO anadir un filtro para filtrar usarios por equipos
 
 class ClientFilter(django_filters.FilterSet):
 
-    name = django_filters.CharFilter(method='filter_name')
+    full_name = django_filters.CharFilter(method='filter_name')
     email = django_filters.CharFilter(field_name="email", lookup_expr='icontains')
     sales_contact = django_filters.CharFilter(field_name="sales_contact")
 

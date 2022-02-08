@@ -4,13 +4,7 @@ from django.conf import settings
 
 
 class User(AbstractUser):
-    TEAMS = (
-        ('ADMIN', 'Admin team, managing users and accessing all data'),
-        ('SALES', 'Sales team, managing clients and contracts'),
-        ('SUPPORT', 'Suppport team, managing events'),
-    )
-    
-    team = models.CharField(choices=TEAMS, max_length=7)
+    pass
 
 
 class Client(models.Model):
