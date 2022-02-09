@@ -19,9 +19,8 @@ class MultipleSerializerMixin:
     detail_serializer_class = None
 
     def get_serializer_class(self):
-        detail_serializer_actions = ['retrieve', 'update', 'partial_update', 'create', 'set_password']
+        detail_serializer_actions = ['retrieve', 'update', 'partial_update', 'create']
         if self.action in detail_serializer_actions and self.detail_serializer_class is not None:
-            # Si l'action demandée est le détail alors nous retournons le serializer de détail
             return self.detail_serializer_class
         return super().get_serializer_class()
 
@@ -64,7 +63,7 @@ class ContractViewset(MultipleSerializerMixin, ModelViewSet):
 
     serializer_class = serializers.ContractListSerializer
     detail_serializer_class = serializers.ContractDetailSerializer
-    permission_classes = [IsAdmin|IsSalesContact, ]
+    permission_classes = [IsAdmin|IsSalesContact]
     filterset_class = ContractFilter
 
     def get_queryset(self):
@@ -73,15 +72,17 @@ class ContractViewset(MultipleSerializerMixin, ModelViewSet):
         if self.action == "list" and not user.is_superuser:
             queryset = Contract.objects.filter(sales_contact=self.request.user)
         else:
-            queryset = Contract.objects.all()        
+            queryset = Contract.objects.all()
 
         return queryset
 
+    
     def create(self, request):        
         data = request.data.copy()
         data['sales_contact'] = request.user.id
+        data['is_signed'] = 'false'
 
-        serialized_data = serializers.ContractDetailSerializer(data=data)
+        serialized_data = self.detail_serializer_class(data=data)
         serialized_data.is_valid(raise_exception=True)
         serialized_data.save()
 
@@ -94,22 +95,31 @@ class ContractViewset(MultipleSerializerMixin, ModelViewSet):
 
     def partial_update(self, request, pk=None):
         contract = get_object_or_404(Contract, pk=pk)
-        if 'is_signed' in request.data:
-            print(contract.is_signed)
-            if not contract.is_signed and request.data["is_signed"] == "true":
-                contract_just_signed = True
-                # Automatiser la création de contrat ? 
 
-        serialized_data = serializers.ContractDetailSerializer(data=request.data)
+        serialized_data = self.detail_serializer_class(contract, data=request.data, partial=True)
         serialized_data.is_valid(raise_exception=True)
         serialized_data.save()
 
         return Response(serialized_data.data)
 
-    # @action(detail=True, methods=['post'])
-    # def create_event(self, request, *args, **kwargs):
-    #     print("this contract has been signed.")
-    #     EventViewset.reverse_action()
+    @action(detail=True, methods=['post'])
+    def mark_as_signed(self, request, pk=None):
+        contract = get_object_or_404(Contract, pk=pk)
+        data = request.data.copy()
+        data['client'] = contract.client.id
+        print(f"\n{data['event_date']}")
+
+        if not contract.is_signed:            
+            new_event = serializers.EventDetailSerializer(data=data)
+            new_event.is_valid(raise_exception=True)
+            new_event.save()
+
+            contract.is_signed = True
+            contract.save()            
+
+            return Response(new_event.data, status=200)
+        else:
+            return Response(f"Contract {pk} already marked as signed.", status=400)
 
 
 class EventViewset(ModelViewSet):

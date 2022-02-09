@@ -30,6 +30,7 @@ class ContractFilter(django_filters.FilterSet):
     updated_before = django_filters.DateTimeFilter(field_name="date_updated", lookup_expr='lte')
     min_amount = django_filters.NumberFilter(field_name="amount", lookup_expr='gte')
     max_amount = django_filters.NumberFilter(field_name="amount", lookup_expr='lte')
+    is_signed = django_filters.BooleanFilter(field_name="is_signed")
 
     class Meta:
         model = Contract

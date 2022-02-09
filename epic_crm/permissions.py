@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.permissions import BasePermission
 from rest_framework.exceptions import APIException
 
-from epic_crm.models import User, Client
+from epic_crm.models import User, Client, Contract
 
 
 class IsAdmin(BasePermission):
@@ -23,26 +23,25 @@ class IsSalesContact(BasePermission):
 
         if user.groups.filter(name="sales").exists():
             # if view.action == "create" and request.path_info == "/api/v1/events/":
-            #     # Sales team can create events for their clients
-            #     client = Client.objects.filter(pk=request.data.get("client"))
-            #     if not client.exists():
-            #         raise APIException("Client must be an existing client id")
-            #     if client.first().sales_contact == user:
-            #         return True
-            # else:
-                # For everything else, user needs to be client sales_contact
-            if view.action in ["list", "create"]:
+            
+            if view.action in ["list", "create", "mark_as_signed"]:
                 return True
-            elif kwargs.get('pk'):
-                client = get_object_or_404(Client, pk=kwargs.get('pk'))
-                if client.sales_contact in [request.user, None]:
-                    return True
-                
+            elif view.action == "destroy":
+                return False
+            elif kwargs.get('pk'): 
+                if "clients" in request.path_info:
+                    client = get_object_or_404(Client, pk=kwargs.get('pk'))
+                    if client.sales_contact in [request.user, None]:
+                        return True
+                if "contracts" in request.path_info:
+                    contract = get_object_or_404(Contract, pk=kwargs.get('pk'))
+                    if contract.sales_contact in [request.user, None]:
+                        return True
+
 
     def has_object_permission(self, request, view, obj):
-    
-        if view.action != "destroy" and obj.sales_contact in [request.user, None]:
-            print(f'\n{obj.sales_contact} {request.user}')
+
+        if obj.sales_contact in [request.user, None]:
             return True
 
 

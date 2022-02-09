@@ -35,12 +35,6 @@ class ClientListSerializer(ModelSerializer):
         model = Client
         fields = ['id', 'full_name', 'email', 'sales_contact']
 
-    def validate_email(self, value):
-        existing_client = Client.objects.filter(email=value)
-        if existing_client.exists():
-            raise ValidationError(f'email already listed in database.')
-        return value
-
 
 class ClientDetailSerializer(ModelSerializer):
 
@@ -64,17 +58,17 @@ class ContractDetailSerializer(ModelSerializer):
     class Meta:
         model = Contract
         fields = '__all__'
+        read_only_fields = ['is_signed']
 
     def validate(self, data):
-        print('\n')
-        client = data['client']
-        user = data['sales_contact']
-        print(client)
-        print(user)
-        if client.sales_contact in [user, None]:
-            return data
-        else:
-            raise ValidationError("You cannot create a contract for a client who is not neither linked to you nor a prospect.")            
+
+        if data.get('client'):
+            client = data['client']
+            user = data['sales_contact']
+            if client.sales_contact not in [user, None]:
+                raise ValidationError("Cannot create a contract for a client linked to another salesperson.")            
+
+        return data
 
 
 class EventListSerializer(ModelSerializer):
@@ -89,9 +83,6 @@ class EventDetailSerializer(ModelSerializer):
     class Meta:
         model = Event
         fields = '__all__'
-        read_only_fields = ['client', 'support_contact']
+        # read_only_fields = ['client', 'support_contact']
 
-    # def validate_event_date(self, value):
-    # TODO asegurarse que el evento es en el futuro
-    def validate_event_date(self, value):
-        pass
+    # TODO make sure event date is in the future ?

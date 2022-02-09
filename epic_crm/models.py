@@ -36,7 +36,7 @@ class Contract(models.Model):
     client = models.ForeignKey(to='Client', on_delete=models.PROTECT)
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
-    is_signed = models.BooleanField() # Previously "status"
+    is_signed = models.BooleanField(default=False) # Previously "status"
     amount = models.FloatField()
     payment_due = models.DateTimeField()
 
