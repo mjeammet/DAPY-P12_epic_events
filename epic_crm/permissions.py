@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.permissions import BasePermission
 from rest_framework.exceptions import APIException
 
-from epic_crm.models import User, Client, Contract
+from epic_crm.models import User, Client, Contract, Event
 
 
 class IsAdmin(BasePermission):
@@ -21,9 +21,7 @@ class IsSalesContact(BasePermission):
         user = request.user
         kwargs = view.kwargs
 
-        if user.groups.filter(name="sales").exists():
-            # if view.action == "create" and request.path_info == "/api/v1/events/":
-            
+        if user.groups.filter(name="sales").exists():            
             if view.action in ["list", "create", "mark_as_signed"]:
                 return True
             elif view.action == "destroy":
@@ -51,10 +49,16 @@ class IsSupportContact(BasePermission):
         user = request.user
 
         if Group.objects.get(name='support') in user.groups.all():
-            return True
+            if view.action == "list":
+                return True
+            elif view.kwargs.get('pk'):
+                event = get_object_or_404(Event, pk=view.kwargs['pk'])
+                if event.support_contact == user:
+                    return True
 
     def has_object_permission(self, request, view, obj):
 
-        supportteam_allowed_actions = ['list', 'retrieve', 'update']
-        if obj.support_contact == request.user and view.action in supportteam_allowed_actions:
-            return True
+        support_team_allowed_actions = ['update']
+        if "events" in request.path_info and view.action in support_team_allowed_actions:
+            if obj.support_contact == request.user:
+                return True

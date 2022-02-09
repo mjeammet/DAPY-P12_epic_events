@@ -40,7 +40,7 @@ class ClientViewset(MultipleSerializerMixin, ModelViewSet):
 
     serializer_class = serializers.ClientListSerializer
     detail_serializer_class = serializers.ClientDetailSerializer
-    permission_classes = [IsAdmin|IsSalesContact]
+    permission_classes = [IsAdmin|IsSalesContact|IsSupportContact]
     filterset_class = ClientFilter
 
     def get_queryset(self):
@@ -52,7 +52,7 @@ class ClientViewset(MultipleSerializerMixin, ModelViewSet):
             elif Group.objects.get(name='support') in user.groups.all():
                 queryset = Client.objects.filter(events__support_contact=user)
             else:
-                raise APIException('You currently don\t belong to any team, please contact an admin to be added to sales or support team.')
+                raise APIException('You currently don\t belong to any authorized team, please contact an admin to be added to sales or support team.')
         else:
             queryset = Client.objects.all()
 
@@ -63,7 +63,7 @@ class ContractViewset(MultipleSerializerMixin, ModelViewSet):
 
     serializer_class = serializers.ContractListSerializer
     detail_serializer_class = serializers.ContractDetailSerializer
-    permission_classes = [IsAdmin|IsSalesContact]
+    permission_classes = [IsAdmin|IsSalesContact, ]
     filterset_class = ContractFilter
 
     def get_queryset(self):
@@ -122,7 +122,7 @@ class ContractViewset(MultipleSerializerMixin, ModelViewSet):
             return Response(f"Contract {pk} already marked as signed.", status=400)
 
 
-class EventViewset(ModelViewSet):
+class EventViewset(MultipleSerializerMixin, ModelViewSet):
 
     serializer_class = serializers.EventListSerializer
     detail_serializer_class = serializers.EventDetailSerializer
@@ -130,14 +130,11 @@ class EventViewset(ModelViewSet):
     filterset_class = EventFilter
 
     def get_queryset(self):
-        user = self.request.user    
-        queryset = Event.objects.filter(support_contact=user)
+        user = self.request.user
+
+        if self.action == "list" and not user.is_superuser:
+            queryset = Event.objects.filter(support_contact=user)
+        else:
+            queryset = Event.objects.all()        
 
         return queryset
-
-    def get_permissions(self):
-        if self.action == "create":
-            permission_classes = [IsAdmin|IsSalesContact]
-        else:
-            permission_classes = self.permission_classes
-        return [permission() for permission in permission_classes]
