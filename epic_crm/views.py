@@ -107,7 +107,6 @@ class ContractViewset(MultipleSerializerMixin, ModelViewSet):
         contract = get_object_or_404(Contract, pk=pk)
         data = request.data.copy()
         data['client'] = contract.client.id
-        print(f"\n{data['event_date']}")
 
         if not contract.is_signed:            
             new_event = serializers.EventDetailSerializer(data=data)
